@@ -1,12 +1,15 @@
 package com.example.musicapp
 
+import android.annotation.SuppressLint
 import android.media.MediaPlayer
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
+import android.provider.MediaStore.Audio.Media
 import android.widget.Button
 import android.widget.SeekBar
 import android.widget.TextView
+import android.widget.Toast
 import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
@@ -55,16 +58,56 @@ class MainActivity : AppCompatActivity() {
             handler.postDelayed(UpdateSongTime, 100)
         }
 
+        //Setting the Music title
+        title_txt.text = ""+resources.getResourceEntryName(R.raw.understand)
+
+        //Stop btn
+        stop_btn.setOnClickListener(){
+            mediaPlayer.pause()
+        }
+
+        //Forwards btn
+        forward_btn.setOnClickListener(){
+            var temp = startTime
+            if ((temp + forwardTime) <= finalTime){
+                startTime = startTime + forwardTime
+                mediaPlayer.seekTo(startTime.toInt())
+            }else{
+                Toast.makeText(this, "Cannot jump foward", Toast.LENGTH_LONG).show()
+            }
+        }
+
+        back_btn.setOnClickListener(){
+            var temp = startTime.toInt()
+            if((temp - backwardTime) > 0){
+                startTime = startTime - backwardTime
+                mediaPlayer.seekTo(startTime.toInt())
+            }else{
+                Toast.makeText(this, "Cannot jump backward", Toast.LENGTH_LONG).show()
+            }
+        }
+
     }
 
     //Create Runnable
     val UpdateSongTime: Runnable = object :Runnable{
+        @SuppressLint("SetTextI18n")
         override fun run() {
             startTime = mediaPlayer.currentPosition.toDouble()
-            time_txt.text = "" + String.format("%d min, %d sec",
-                TimeUnit.MILLISECONDS.toMinutes(startTime.toLong()),
-                TimeUnit.MILLISECONDS.toSeconds(startTime.toLong() - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(startTime.toLong())))
-            )
+            time_txt.text = buildString {
+                append("")
+                append(
+                    String.format(
+                        "%d min, %d sec",
+                        TimeUnit.MILLISECONDS.toMinutes(startTime.toLong()),
+                        TimeUnit.MILLISECONDS.toSeconds(
+                            startTime.toLong() - TimeUnit.MINUTES.toSeconds(
+                                TimeUnit.MILLISECONDS.toMinutes(startTime.toLong())
+                            )
+                        )
+                    )
+                )
+            }
             seekBar.progress = startTime.toInt()
             handler.postDelayed(this, 100)
         }
